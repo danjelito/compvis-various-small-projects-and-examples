@@ -3,7 +3,7 @@ import easyocr
 import matplotlib.pyplot as plt
 
 # read image
-img_path= 'dataset/signboard/1.jpg'
+img_path= 'dataset/signboard/5.jpg'
 img= cv2.imread(img_path)
 
 # create text detector instance
