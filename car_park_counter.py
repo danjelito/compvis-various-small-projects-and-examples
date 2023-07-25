@@ -23,11 +23,19 @@ images= [resize(i, (15, 15)) for i in images]
 images= np.asarray([i.flatten() for i in images])
 labels= np.asarray(labels)
 
-# train test split
+# train val test split
 x_train, x_test, y_train, y_test = train_test_split(
     images, 
     labels,
     stratify= labels,
+    test_size= 0.2,
+    shuffle= True,  
+    random_state= 42
+)
+x_train, x_val, y_train, y_val = train_test_split(
+    x_train, 
+    y_train,
+    stratify= y_train,
     test_size= 0.2,
     shuffle= True,  
     random_state= 42
@@ -41,18 +49,19 @@ n_trials= 10
 def objective(trial):
 
     param= {
-        'C': trial.suggest_float('C', 1e-3, 1000.0, log=True),
-        'gamma': trial.suggest_float('gamma', 1e-3, 100.0, log=True),
+        'C': trial.suggest_float('C', 1e-3, 1000.0, log= True),
+        'gamma': trial.suggest_float('gamma', 1e-3, 100.0, log= True),
     }
     classifier.set_params(**param)
     classifier.fit(x_train, y_train)
-    test_acc= classifier.score(x_test, y_test)
+    val_acc= classifier.score(x_val, y_val)
 
-    return test_acc
+    return val_acc
 
 # create a study object and optimize the objective function
 study = optuna.create_study(direction='maximize')
 study.optimize(objective, n_trials= n_trials)
 
 # print(x_train.shape, y_train.shape)
+# print(x_val.shape, y_val.shape)
 # print(x_test.shape, y_test.shape)
