@@ -6,7 +6,9 @@ from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 import optuna
+from optuna.samplers import TPESampler
 import numpy as np
+import pickle
 
 # get images and labels
 image_dir= Path('dataset/parking lot/image')
@@ -48,20 +50,31 @@ n_trials= 10
 # define an objective function to be maximized
 def objective(trial):
 
-    param= {
+    params= {
         'C': trial.suggest_float('C', 1e-3, 1000.0, log= True),
         'gamma': trial.suggest_float('gamma', 1e-3, 100.0, log= True),
     }
-    classifier.set_params(**param)
+    classifier.set_params(**params)
     classifier.fit(x_train, y_train)
     val_acc= classifier.score(x_val, y_val)
 
     return val_acc
 
 # create a study object and optimize the objective function
-study = optuna.create_study(direction='maximize')
+sampler = TPESampler(seed= 10) # make the sampler behave in a deterministic way
+study = optuna.create_study(direction='maximize', sampler= sampler)
 study.optimize(objective, n_trials= n_trials)
+best_params= study.best_params
 
-# print(x_train.shape, y_train.shape)
-# print(x_val.shape, y_val.shape)
-# print(x_test.shape, y_test.shape)
+# train classifier with best params
+classifier= SVC(**best_params)
+classifier.fit(x_train, y_train)
+test_acc= classifier.score(x_test, y_test)
+
+# test
+print(f'Test acc: {test_acc}')
+
+# save model
+path= Path('output/car_park_counter_model.pkl')
+pickle.dump(classifier, open(path, 'wb'))
+print('Model saved.')
