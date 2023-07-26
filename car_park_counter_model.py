@@ -69,9 +69,9 @@ best_params= study.best_params
 # train classifier with best params
 classifier= SVC(**best_params)
 classifier.fit(x_train, y_train)
-test_acc= classifier.score(x_test, y_test)
 
 # test
+test_acc= classifier.score(x_test, y_test)
 print(f'Test acc: {test_acc}')
 
 # save model
