@@ -18,7 +18,7 @@ def detect_face(img, face_detection_object):
 
     # detect face -> will return x, y, w, h
     face = face_detection_object.detectMultiScale(
-        image=img_gray, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)
+        image=img_gray, scaleFactor=1.1, minNeighbors=3, minSize=(30, 30)
     )
     # if face is not detected, return all 0
     if len(face) == 0:
@@ -74,7 +74,7 @@ elif args.mode in ["video"]:
     output_video = cv2.VideoWriter(
         filename=output_filepath,
         fourcc=cv2.VideoWriter_fourcc(*"MP4V"),
-        fps=30,
+        fps=25,
         frameSize=(frame.shape[1], frame.shape[0]),
     )
 
@@ -90,7 +90,6 @@ elif args.mode in ["video"]:
     cap.release()
     output_video.release()
 
-# detect face
 elif args.mode in ["debug"]:
     # read image
     img_path = args.file_path
