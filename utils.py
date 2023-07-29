@@ -27,12 +27,15 @@ def load_image_dataset(dataset_dir, shuffle= False):
         if os.path.isfile(c_dir):
             continue
         # list all images inside image folder
-        # append to list
         images= os.listdir(c_dir)
+        # append to list
         for image in images:
-            image_path= c_dir / image 
-            images_paths.append(image_path)
-            labels.append(c)
+	        # if in image format, append to list
+            image_formats= ['jpg', 'jpeg', 'png']
+            if any(image.endswith(ext) for ext in image_formats):
+               image_path= c_dir / image 
+               images_paths.append(image_path)
+               labels.append(c)
 
     # shuffle dataset
     if shuffle:
