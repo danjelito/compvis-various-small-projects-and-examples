@@ -7,7 +7,9 @@ from pathlib import Path
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", type=str, default="webcam")
 parser.add_argument(
-    "--file_path", type=str, default="dataset/person talking/person-talking-2.mp4"
+    "--file_path", 
+    type=str, 
+    default="dataset/person talking/person-talking-2.mp4"
 )
 args = parser.parse_args()
 
