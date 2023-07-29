@@ -46,3 +46,16 @@ def load_image_dataset(dataset_dir, shuffle= False):
         images_paths, labels = zip(*indices)
 
     return images_paths, labels
+
+def draw_landmarks(mp_hands_obj, 
+                   mp_drawing_obj, 
+                   mp_drawing_styles_obj, 
+                   img_rgb, 
+                   hand_landmarks):
+    mp_drawing_obj.draw_landmarks(
+        img_rgb, 
+        hand_landmarks, 
+        mp_hands_obj.HAND_CONNECTIONS, 
+        mp_drawing_styles_obj.get_default_hand_landmarks_style(), 
+        mp_drawing_styles_obj.get_default_hand_connections_style(), 
+    )
