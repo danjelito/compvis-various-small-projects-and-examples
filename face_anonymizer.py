@@ -5,9 +5,9 @@ from pathlib import Path
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--mode", type=str, default="video")
+parser.add_argument("--mode", type=str, default="webcam")
 parser.add_argument(
-    "--file_path", type=str, default="dataset/person talking/person-talking-1.mp4"
+    "--file_path", type=str, default="dataset/person talking/person-talking-2.mp4"
 )
 args = parser.parse_args()
 
@@ -18,7 +18,7 @@ def detect_face(img, face_detection_object):
 
     # detect face -> will return x, y, w, h
     face = face_detection_object.detectMultiScale(
-        image=img_gray, scaleFactor=1.1, minNeighbors=3, minSize=(30, 30)
+        image=img_gray, scaleFactor=1.2, minNeighbors=5, minSize=(50, 50)
     )
     # if face is not detected, return all 0
     if len(face) == 0:
@@ -71,10 +71,11 @@ elif args.mode in ["video"]:
     # create video object
     original_filename = str(Path(args.file_path).stem)
     output_filepath = str(Path(f"output/video/{original_filename}_blurred.mp4"))
+    original_fps= cap.get(cv2.CAP_PROP_FPS)
     output_video = cv2.VideoWriter(
         filename=output_filepath,
         fourcc=cv2.VideoWriter_fourcc(*"MP4V"),
-        fps=25,
+        fps=original_fps,
         frameSize=(frame.shape[1], frame.shape[0]),
     )
 
@@ -89,6 +90,32 @@ elif args.mode in ["video"]:
 
     cap.release()
     output_video.release()
+
+elif args.mode in ['webcam']:
+    # read video
+    cap = cv2.VideoCapture(0)
+    ret, frame = cap.read()
+
+    while ret:
+        # get face bbox
+        x, y, w, h = detect_face(frame, face_classifier)
+        # blur face
+        frame = blur_face(frame, x, y, w, h)
+        # create and resize window
+        window_title= 'press q to quit'
+        cv2.namedWindow(window_title, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_title, 800, 600)
+        # visualize
+        cv2.imshow(window_title, frame)
+        
+        # press q to quit
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        
+        # read next frame
+        ret, frame = cap.read()
+
+    cap.release()
 
 elif args.mode in ["debug"]:
     # read image
