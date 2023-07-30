@@ -4,7 +4,7 @@ from pathlib import Path
 from skimage.io import imread
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, f1_score
 import optuna
 from optuna.samplers import TPESampler
@@ -39,26 +39,29 @@ x_train, x_test, y_train, y_test = train_test_split(
 def objective(trial):
     
     params= {
-        'C': trial.suggest_float('C', 0.00001, 10, log= True),
-        'kernel': trial.suggest_categorical('kernel', [
-            'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'
+        'max_depth': trial.suggest_int('max_depth', 2, 500),
+        'min_samples_split': trial.suggest_int('min_samples_split', 2, 10),
+        'min_samples_leaf': trial.suggest_int('min_samples_leaf', 2, 10),
+        'max_features': trial.suggest_int('max_features', 2, 100),
+        'criterion': trial.suggest_categorical('criterion', [
+            'gini', 'entropy', 'log_loss'
         ]), 
     }
-    clf= SVC(**params)
+    clf= DecisionTreeClassifier(**params)
     acc= cross_val_score(clf, 
                          x_train, y_train, 
                          cv= 3, scoring= 'accuracy')
     return acc.mean()
 
 # HP tuning
-n_trials= 1
+n_trials= 100
 sampler = TPESampler(seed= 1) # set random state from sampler
 study = optuna.create_study(direction='maximize', sampler= sampler)
 study.optimize(objective, n_trials= n_trials)
 best_params= study.best_params
 
 # train classifier with best params
-clf= SVC(**best_params)
+clf= DecisionTreeClassifier(**best_params)
 clf.fit(x_train, y_train)
 
 # test accuracy

@@ -30,7 +30,7 @@ video_path= 'dataset/parking lot/video/parking_1920_1080_loop.mp4'
 cap= cv2.VideoCapture(video_path)
 
 # load mask
-mask_path= 'dataset/parking lot/mask/mask_1920_1080.png'
+mask_path= 'dataset/parking lot/mask/mask_1920_1080_better.png'
 mask= cv2.imread(mask_path, flags= 0)
 connected_comp= cv2.connectedComponentsWithStats(image= mask, 
                                                  labels= 4, 
@@ -41,34 +41,47 @@ spots= get_parking_spot_bboxes(connected_comp)
 model_path= 'model/car_park_clf.pickle'
 clf= pickle.load(open(model_path, 'rb'))
 
+frame_per_clf= 300  # predict every 30 frames
+frame_number= 0
+
+# list of all spots' status
+spot_statuses= [None for i in spots]
+
 ret= True
 while ret:
     ret, frame= cap.read()
 
-    # get each parking spot
-    for spot in spots:
+    # get each parking spot to predict
+    for spot_idx, spot in enumerate(spots):
         x1, y1, w, h= spot
 
-        # get spot to predict
-        spot_crop= frame[y1:y1+h, x1:x1+w, :]
-        spot_status= is_empty(clf, spot_crop)
+        if frame_number % frame_per_clf == 0:
+            spot_crop= frame[y1:y1+h, x1:x1+w, :]
+            spot_status= is_empty(clf, spot_crop)
+            spot_statuses[spot_idx] = spot_status
 
-        # draw parking spots
-        # red if not empty, else red
-        color= (0, 0, 255) if spot_status == 'empty' else (0, 255, 0) 
+    # draw parking spots
+    # red if not empty, else red
+    for spot, spot_status in zip(spots, spot_statuses):
+        x1, y1, w, h= spot
+
+        color= (0, 255, 0) if spot_status == 'empty' else (0, 0, 255) 
         cv2.rectangle(img= frame, 
-                      pt1= (x1, y1), 
-                      pt2= (x1+w, y1+h), 
-                      color= color, 
-                      thickness= 2)
+                    pt1= (x1, y1), 
+                    pt2= (x1+w, y1+h), 
+                    color= color, 
+                    thickness= 2)
         
+    # update frame number
+    frame_number += 1
+    
     # visualize
     window_title= 'press q to quit'
     cv2.namedWindow(window_title, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(window_title, 1000, 750)
+    cv2.resizeWindow(window_title, 1280, 720)
     cv2.imshow(window_title, frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(25) & 0xFF == ord('q'):
         break    
 
 cap.release()
