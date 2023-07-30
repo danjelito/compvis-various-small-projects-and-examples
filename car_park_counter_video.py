@@ -5,6 +5,7 @@ from skimage.transform import resize
 import cv2
 
 def get_parking_spot_bboxes(connected_components):
+    """Return the coordinate of boox from connected components"""
     (total_label, label_ids, values, centroids)= connected_components
     slots= []
     coef= 1
@@ -16,6 +17,13 @@ def get_parking_spot_bboxes(connected_components):
         h= int(values[i, cv2.CC_STAT_HEIGHT] * coef)
         slots.append([x1, y1, w, h])
     return slots
+
+def is_empty(clf, spot_img_bgr):
+    """Predict if spot is empty or not"""
+    img= resize(spot_img_bgr, (15, 15, 3)).flatten().reshape(1, -1)
+    y_pred= clf.predict(img)
+    return y_pred
+
 
 # load video
 video_path= 'dataset/parking lot/video/parking_1920_1080_loop.mp4'
@@ -29,26 +37,38 @@ connected_comp= cv2.connectedComponentsWithStats(image= mask,
                                                  connectivity= cv2.CV_32S)
 spots= get_parking_spot_bboxes(connected_comp)
 
+# load clf model
+model_path= 'model/car_park_clf.pickle'
+clf= pickle.load(open(model_path, 'rb'))
+
 ret= True
 while ret:
     ret, frame= cap.read()
 
-    # draw parking spots
+    # get each parking spot
     for spot in spots:
         x1, y1, w, h= spot
+
+        # get spot to predict
+        spot_crop= frame[y1:y1+h, x1:x1+w, :]
+        spot_status= is_empty(clf, spot_crop)
+
+        # draw parking spots
+        # red if not empty, else red
+        color= (0, 0, 255) if spot_status == 'empty' else (0, 255, 0) 
         cv2.rectangle(img= frame, 
                       pt1= (x1, y1), 
                       pt2= (x1+w, y1+h), 
-                      color= (255, 0, 0), 
+                      color= color, 
                       thickness= 2)
-    
+        
     # visualize
     window_title= 'press q to quit'
     cv2.namedWindow(window_title, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_title, 1000, 750)
     cv2.imshow(window_title, frame)
 
-    if cv2.waitKey(25) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break    
 
 cap.release()

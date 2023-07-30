@@ -4,7 +4,7 @@ from pathlib import Path
 from skimage.io import imread
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, f1_score
 import optuna
 from optuna.samplers import TPESampler
@@ -40,30 +40,29 @@ def objective(trial):
     
     params= {
         'C': trial.suggest_float('C', 0.00001, 10, log= True),
-        'solver': trial.suggest_categorical('solver', [
-            'lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 
-            'sag', 'saga'
+        'kernel': trial.suggest_categorical('kernel', [
+            'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'
         ]), 
     }
-    clf= LogisticRegression(**params)
+    clf= SVC(**params)
     acc= cross_val_score(clf, 
                          x_train, y_train, 
                          cv= 3, scoring= 'accuracy')
     return acc.mean()
 
 # HP tuning
-n_trials= 100
+n_trials= 1
 sampler = TPESampler(seed= 1) # set random state from sampler
 study = optuna.create_study(direction='maximize', sampler= sampler)
 study.optimize(objective, n_trials= n_trials)
 best_params= study.best_params
 
 # train classifier with best params
-classifier= LogisticRegression(**best_params)
-classifier.fit(x_train, y_train)
+clf= SVC(**best_params)
+clf.fit(x_train, y_train)
 
 # test accuracy
-y_pred= classifier.predict(x_test)
+y_pred= clf.predict(x_test)
 test_acc= accuracy_score(y_test, y_pred)
 
 # test F1
@@ -77,5 +76,5 @@ print(f'Test acc: {test_acc: .4f} - Test F1: {test_f1: .4f}')
 
 # save model
 path= Path('model/car_park_clf.pickle')
-pickle.dump(classifier, open(path, 'wb'))
+pickle.dump(clf, open(path, 'wb'))
 print('Model saved.')
