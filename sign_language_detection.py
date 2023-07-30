@@ -26,9 +26,6 @@ cap= cv2.VideoCapture(0)
 while True:
     ret, frame= cap.read()
 
-    # store coordinate per frame
-    img_coor= []
-
     # convert to mp_image
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB,
                         data=frame)
@@ -42,14 +39,16 @@ while True:
         # get hand landmark
         hand_landmarks= results.hand_landmarks[0]
         
+        # store coordinate per frame
+        img_coor= []
+
         # get 3 coordinate for all 21 landmark
         for landmark in hand_landmarks:
             x= landmark.x
             y= landmark.y
-            z= landmark.z
             
             # extend img_coor
-            img_coor.extend([x, y, z])
+            img_coor.extend([x, y])
 
         # predict
         features= np.array(img_coor).reshape(1, -1)

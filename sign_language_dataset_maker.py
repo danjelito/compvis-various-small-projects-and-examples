@@ -52,14 +52,13 @@ for img in imgs:
         for landmark in hand_landmarks:
             x= landmark.x
             y= landmark.y
-            z= landmark.z
             
             # extend data aux
-            img_coor.extend([x, y, z])
+            img_coor.extend([x, y])
 
     # if no hand is detected, return all 0
     else:
-        img_coor.extend([0] * 63)
+        img_coor.extend([0] * 42)
 
     # append this image features to data
     features.append(img_coor)
