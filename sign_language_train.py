@@ -50,7 +50,7 @@ y_pred= clf.predict(x_test)
 acc= accuracy_score(y_test, y_pred)
 f1= f1_score(y_test, y_pred, average= 'weighted')
 
-print(f'acc = {acc: .4f} - f1 = {f1: .4f}')
+print(f'test acc = {acc: .4f} - test f1 = {f1: .4f}')
 
 f= open('model/sign_digit.pickle', 'wb')
 pickle.dump({'model': clf}, f)
