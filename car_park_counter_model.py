@@ -5,6 +5,7 @@ from skimage.io import imread
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score
 import optuna
 from optuna.samplers import TPESampler
 import numpy as np
@@ -43,20 +44,16 @@ def objective(trial):
             'lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 
             'sag', 'saga'
         ]), 
-
     }
-
     clf= LogisticRegression(**params)
-
     acc= cross_val_score(clf, 
-                        x_train, y_train, 
-                        cv= 3, scoring= 'accuracy')
-
+                         x_train, y_train, 
+                         cv= 3, scoring= 'accuracy')
     return acc.mean()
 
-n_trials= 10
-# make the sampler behave in a deterministic way
-sampler = TPESampler(seed= 1) 
+# HP tuning
+n_trials= 100
+sampler = TPESampler(seed= 1) # set random state from sampler
 study = optuna.create_study(direction='maximize', sampler= sampler)
 study.optimize(objective, n_trials= n_trials)
 best_params= study.best_params
@@ -65,9 +62,18 @@ best_params= study.best_params
 classifier= LogisticRegression(**best_params)
 classifier.fit(x_train, y_train)
 
-# test
-test_acc= classifier.score(x_test, y_test)
-print(f'Test acc: {test_acc}')
+# test accuracy
+y_pred= classifier.predict(x_test)
+test_acc= accuracy_score(y_test, y_pred)
+
+# test F1
+label_map= {'empty': 1, 'not_empty': 0}
+y_test_mapped= np.vectorize(label_map.get)(y_test)
+y_pred_mapped= np.vectorize(label_map.get)(y_pred)
+test_f1= f1_score(y_test_mapped, y_pred_mapped)
+
+# print test result
+print(f'Test acc: {test_acc: .4f} - Test F1: {test_f1: .4f}')
 
 # save model
 path= Path('model/car_park_clf.pickle')
