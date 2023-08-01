@@ -4,7 +4,7 @@ from pathlib import Path
 from skimage.io import imread
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, f1_score
 import optuna
 from optuna.samplers import TPESampler
@@ -39,16 +39,15 @@ x_train, x_test, y_train, y_test = train_test_split(
 def objective(trial):
     
     params= {
-        'n_estimators': trial.suggest_int('n_estimators', 2, 20),
         'criterion': trial.suggest_categorical('criterion', [
             'gini', 'entropy', 'log_loss'
         ]), 
-        'max_depth': trial.suggest_int('max_depth', 2, 20),
+        'max_depth': trial.suggest_int('max_depth', 2, 500),
         'min_samples_split': trial.suggest_int('min_samples_split', 2, 10),
         'min_samples_leaf': trial.suggest_int('min_samples_leaf', 2, 10),
-        'max_features': trial.suggest_int('max_features', 2, 100),
+        'max_features': trial.suggest_int('max_features', 2, 500),
     }
-    clf= RandomForestClassifier(**params)
+    clf= DecisionTreeClassifier(**params)
     acc= cross_val_score(clf, 
                          x_train, y_train, 
                          cv= 3, scoring= 'accuracy')
@@ -62,7 +61,7 @@ study.optimize(objective, n_trials= n_trials)
 best_params= study.best_params
 
 # train classifier with best params on train set
-clf= RandomForestClassifier(**best_params)
+clf= DecisionTreeClassifier(**best_params)
 clf.fit(x_train, y_train)
 
 # test accuracy

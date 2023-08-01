@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from skimage.transform import resize
 import cv2
+from datetime import datetime
 
 def get_parking_spot_bboxes(connected_components):
     """Return the coordinate of boox from connected components"""
@@ -41,7 +42,7 @@ spots= get_parking_spot_bboxes(connected_comp)
 model_path= 'model/car_park_clf.pickle'
 clf= pickle.load(open(model_path, 'rb'))
 
-frame_per_clf= 300  # predict every 30 frames
+frame_per_clf= 30  # predict every 30 frames
 frame_number= 0
 
 # list of all spots' status
@@ -59,6 +60,11 @@ while ret:
             spot_crop= frame[y1:y1+h, x1:x1+w, :]
             spot_status= is_empty(clf, spot_crop)
             spot_statuses[spot_idx] = spot_status
+            
+        # if x1 > 1500 and spot_status == "empty" :
+        #     path= f'dataset/parking lot/image/image-{datetime.now()}.png'
+        #     cv2.imwrite(path, spot_crop)
+
 
     # draw parking spots
     # red if not empty, else green
@@ -71,7 +77,7 @@ while ret:
                     pt2= (x1+w, y1+h), 
                     color= color, 
                     thickness= 2)
-        
+    
     # update frame number
     frame_number += 1
     
