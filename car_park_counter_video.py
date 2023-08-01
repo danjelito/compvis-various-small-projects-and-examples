@@ -61,7 +61,7 @@ while ret:
             spot_statuses[spot_idx] = spot_status
 
     # draw parking spots
-    # red if not empty, else red
+    # red if not empty, else green
     for spot, spot_status in zip(spots, spot_statuses):
         x1, y1, w, h= spot
 

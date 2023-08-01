@@ -39,11 +39,11 @@ x_train, x_test, y_train, y_test = train_test_split(
 def objective(trial):
     
     params= {
-        'n_estimators': trial.suggest_int('n_estimators', 2, 500),
+        'n_estimators': trial.suggest_int('n_estimators', 2, 20),
         'criterion': trial.suggest_categorical('criterion', [
             'gini', 'entropy', 'log_loss'
         ]), 
-        'max_depth': trial.suggest_int('max_depth', 2, 500),
+        'max_depth': trial.suggest_int('max_depth', 2, 20),
         'min_samples_split': trial.suggest_int('min_samples_split', 2, 10),
         'min_samples_leaf': trial.suggest_int('min_samples_leaf', 2, 10),
         'max_features': trial.suggest_int('max_features', 2, 100),
